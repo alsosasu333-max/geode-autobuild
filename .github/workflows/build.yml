@@ -23,11 +23,10 @@ jobs:
             "geode": "4.0.0",
             "gd": { "win": "2.2074", "android": "2.2074", "mac": "2.2074", "ios": "2.2074" },
             "version": "v1.0.0",
-            "id": "alsosasu333-max.autodecor",
+            "id": "hsh.autodecor",
             "name": "AutoDecor",
-            "developer": "alsosasu333-max",
-            "description": "Speed button 6x-20x and autodecorator with 100 styles.",
-            "tags": ["editor", "gameplay"]
+            "developer": "Hsh",
+            "description": "Speed button 6x-20x and autodecorator with 100 styles."
           }
           JSONEOF
           curl -sfL https://raw.githubusercontent.com/geode-sdk/example-mod/main/CMakeLists.txt -o CMakeLists.txt
