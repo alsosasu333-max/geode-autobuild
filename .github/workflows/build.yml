@@ -1,0 +1,68 @@
+name: Build mod
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: Android64
+            target: Android64
+          - name: Android32
+            target: Android32
+    name: ${{ matrix.config.name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create project files
+        run: |
+          cat > mod.json << 'JSONEOF'
+          {
+            "geode": "4.0.0",
+            "gd": { "win": "2.2074", "android": "2.2074", "mac": "2.2074", "ios": "2.2074" },
+            "version": "v1.0.0",
+            "id": "player.autodecor",
+            "name": "AutoDecor and Speed",
+            "developer": "player",
+            "description": "Speed button 6x-20x and autodecorator with 100 styles.",
+            "tags": ["editor", "gameplay"]
+          }
+          JSONEOF
+          curl -sfL https://raw.githubusercontent.com/geode-sdk/example-mod/main/CMakeLists.txt -o CMakeLists.txt
+          curl -sfL https://raw.githubusercontent.com/geode-sdk/example-mod/main/logo.png -o logo.png
+          curl -sfL https://raw.githubusercontent.com/geode-sdk/example-mod/main/mod.json -o example-mod.json
+          jq --slurpfile ex example-mod.json '.geode = $ex[0].geode | .gd = $ex[0].gd' mod.json > mod-new.json
+          mv mod-new.json mod.json
+          rm example-mod.json
+          echo "# AutoDecor and Speed" > about.md
+          echo "# v1.0.0" > changelog.md
+
+      - name: Build the mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          bindings: geode-sdk/bindings
+          bindings-ref: main
+          combine: true
+          target: ${{ matrix.config.target }}
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    needs: ['build']
+    permissions:
+      contents: write
+    steps:
+      - uses: geode-sdk/build-geode-mod/combine@main
+        id: build
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUT: ${{ steps.build.outputs.build-output }}
+          TAG: build-${{ github.run_number }}
+          REPO: ${{ github.repository }}
+        run: |
+          find "$OUT" -name '*.geode' -exec gh release create "$TAG" --repo "$REPO" --title "$TAG" {} +
